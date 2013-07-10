@@ -1,0 +1,32 @@
+<?php
+/**
+* Previous / Next function for nodes, ordered by node creation date
+*
+* @param $current_node: node object or node id
+* @param $node_types:  array of node types to query
+*
+* @return array
+*/
+function prevnext_prev_next_created($current_node = NULL, $node_types = array()) {
+  // make node object if only node id given
+  if (!is_object($current_node)) { $current_node = node_load($current_node->nid); }
+
+  // make an array if string value was given
+  if (!is_array($node_types)) { $node_types = array($node_types); }
+
+  // previous
+  $sql = "SELECT n.nid, n.title, n.created FROM {node} n
+    WHERE n.created < %d AND n.type IN ('%s')
+    AND n.status = 1 ORDER BY n.created DESC LIMIT 1";
+  $result = db_query($sql, $current_node->created, implode("','", $node_types));
+  $prev = db_fetch_object($result);
+
+  // next
+  $sql = "SELECT n.nid, n.title, n.created FROM {node} n
+    WHERE n.created > %d AND n.type IN ('%s')
+    AND n.status = 1 ORDER BY n.created ASC LIMIT 1";
+  $result = db_query($sql, $current_node->created, implode("','", $node_types));
+  $next = db_fetch_object($result);
+
+  return array('prev' => $prev, 'next' => $next);
+}
